@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Farmer</title>
+    <style>
+        * {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 1rem 0 0;
+            padding: 0;
+        }
+
+        .pad {
+            padding: 1rem;
+        }
+
+        .pad-x {
+            padding: 0 1rem;
+        }
+
+        .container {
+            max-width: 65ch;
+        }
+
+        *:first-child,
+        body,
+        .m-top-0 {
+            margin-top: 0;
+        }
+
+        :root {
+            --dark: #101010;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #000;
+            background: #fff;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        .box {
+            margin-top: 0;
+            border: 1rem solid #fff;
+            padding: 2rem 1rem;
+        }
+
+        .box.active {
+            border-color: forestgreen;
+        }
+        aside {
+            border: 2px solid blue;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="pad">
+        <h1>Happy Farmer</h1>
+        <audio id="audio" controls="" preload="auto">
+            <source src="https://res.cloudinary.com/dcgyofnia/video/upload/v1730492501/Happy_farmer_bqfh9n.m4a"
+                type="audio/mp4">Your browser does not support the audio element
+        </audio>
+        <!-- <div><button class="pad-x" type="button">scroll to active part of the transcript</button></div> -->
+    </header>
+
+
+    <div class="transcript m-top-0">
+        <div class="box active transcript_piece" data-ellapsed-milliseconds="0">
+            <p><a href="?t=0">Link to this section</a></p>
+            <p>I think water is great,</p>
+            
+        </div>
+        <div class="transcript_piece box" data-ellapsed-milliseconds="2000">
+            <p><a href="?t=2000">Link to this section</a></p>
+            <p>I think soil is great,</p>
+            <aside>
+                <h2>#soil</h2>
+                <p><a href='/grumpy-farmer?t=3500'>Listen to grumpy farmer talk about <strong>soil</strong></a></p>
+            </aside>
+        </div>
+        <div class="transcript_piece box" data-ellapsed-milliseconds="3500">
+            <p><a href="?t=3500">Link to this section</a></p>
+            <p>and I love seeds!</p>
+        </div>
+    </div>
+
+
+    <script>
+        // vars 
+        var html = '', urlMilliseconds;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.forEach((value, key) => {
+            if (key == 't') {
+                urlMilliseconds = value;
+            }
+        });
+        
+        
+
+        // save all transcript_piece in an array
+        const transcriptPieces = document.querySelectorAll('.transcript_piece');
+
+        function removeActiveClass() {
+            var activeElement = document.querySelector('.active');
+            if(activeElement) {
+                activeElement.classList.remove('active');
+            }
+            
+        }
+
+
+        var transcriptMilliseconds = new Array();
+        for (let index = 0; index < transcriptPieces.length; index++) {
+            const piece = transcriptPieces[index];
+            transcriptMilliseconds.push(piece.dataset.ellapsedMilliseconds);
+        }
+        console.log(transcriptMilliseconds);
+
+        var ellapsedMilliseconds = 0;
+        function nextPiece(em) {
+            return em > ellapsedMilliseconds;
+        }
+        function activateCurrentPiece(index) {
+            if (transcriptPieces[index].classList.contains('active')) {
+                return;
+            }
+            else {
+                removeActiveClass();
+                transcriptPieces[index].classList.add('active');
+            }
+        }
+        // audio stuff
+        const audio = document.getElementById('audio');
+        console.log(urlMilliseconds);
+
+        if(urlMilliseconds) {
+            audio.currentTime = urlMilliseconds/1000;
+        }
+
+        function progressThroughTranscript(status) {
+            ellapsedMilliseconds = audio.currentTime * 1000;
+            var nextIndex = transcriptMilliseconds.findIndex(nextPiece);
+            var hasNext = true;
+            if (nextIndex == -1) {
+                hasNext = false;
+                nextIndex = transcriptPieces.length;
+            }
+
+            var currentIndex = nextIndex - 1;
+            activateCurrentPiece(currentIndex);
+
+            if (hasNext && (status == 'playing')) {
+                var delayMilliseconds = transcriptPieces[nextIndex].dataset.ellapsedMilliseconds - ellapsedMilliseconds;
+                setTimeout(function (){
+                    // activateCurrentPiece(nextIndex);
+                    progressThroughTranscript('playing');
+                }, delayMilliseconds);
+            }
+        }
+        audio.onplay = function () {
+            progressThroughTranscript('playing');
+        }; 
+        audio.onseeked = function() {
+            progressThroughTranscript();
+            
+        }
+
+    </script>
+</body>
+
+</html>
+<!-- 
+test out positions with this: http://localhost:1313/slideshow-maker/?a=https%3A%2F%2Fres.cloudinary.com%2Fdcgyofnia%2Fvideo%2Fupload%2Fv1730492501%2FHappy_farmer_bqfh9n.m4a&i=c&t=0%0Ahttps%3A%2F%2Fplace-hold.it%2F100x100%2Fff0000%26text%3D%3A%29+center+center%0Aan+image+of+a+red+rectangle+with+a+smily+emoji%0Athere+once+was+a+red+rectangle...%0A%0A3600%0Ahttps%3A%2F%2Fplace-hold.it%2F100x100%2F00ff00%26text%3D%3Ao+center+center%0Aan+image+of+a+green+rectangle+with+an+oh+face+emoji%0Awho+became+green%21%0A%0A5200%0Ahttps%3A%2F%2Fplace-hold.it%2F100x100%2F0000ff%26text%3D%3AO+center+center%0Aan+image+of+a+blue+rectangle+with+a+bigger+oh+face+emoji%0Athen+blue%21
+https://res.cloudinary.com/dcgyofnia/video/upload/v1730492501/Bored_farmer_weeovy.m4a
+https://res.cloudinary.com/dcgyofnia/video/upload/v1730492501/Grumpy_farmer_w7xilm.m4a
+ -->

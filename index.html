@@ -1,0 +1,136 @@
+<html>
+<head>
+<title></title>
+<script>
+window.globals = {
+  "baserow": {
+    "url": "https://api.baserow.io/api",
+    "token": "cSubd5vZjON0ekgsikysGg3aFIPciIqq",
+    "databaseId": "27606",
+    "tableIds": {
+      "interview": "61327",
+      "excerpt": "61328",
+      "topic": "383980",
+    }
+  }
+}
+
+window.baserowCache = {
+  interview: null,
+  excerpt: null,
+  topic: null,
+}
+
+window.onload = async () => {
+  console.log("application is booting")
+  await fetchEverythingFromBaserow()
+  renderMarkup()
+  enhanceMarkup()
+}
+
+const renderMarkup = () => {
+  document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[0])
+}
+
+const enhanceMarkup = () => {
+}
+
+const fetchEverythingFromBaserow = async () => {
+  const { interview, excerpt, topic } = globals.baserow.tableIds
+  // NOTE: this was written under the assumption that there aren't enough rows in these tables to cause pagination; as written, this will only pull the first page of results from each table. assuming this thing isn't going to scale arbitarily, we could get away with continuing to fetch records and shove them into the cache until each table is exhausted
+  baserowCache.interview = await fetchFromBaserow(`/database/rows/table/${interview}/?user_field_names=true`) 
+  baserowCache.topic = await fetchFromBaserow(`/database/rows/table/${topic}/?user_field_names=true`) 
+  baserowCache.excerpt = await fetchFromBaserow(`/database/rows/table/${excerpt}/?user_field_names=true`) 
+  console.log("baserow fetch ok!", baserowCache)
+}
+
+const fetchFromBaserow = (apiPath) => {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", globals.baserow.url + apiPath, true);
+	xhr.setRequestHeader("Authorization", `Token ${globals.baserow.token}`);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                xhr.status === 200 ? resolve(JSON.parse(xhr.responseText)) : reject(new Error(`Error ${xhr.status}: ${xhr.statusText}`));
+            }
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send();
+    });
+}
+
+const excerptsForInterview = (interview) => {
+  const ids = interview["Excerpt"].map(excerpt => excerpt.id)
+  const filteredExcerpts = baserowCache.excerpt.results.filter(excerpt => ids.indexOf(excerpt.id) !== -1)
+  return filteredExcerpts
+}
+
+
+const onExcerptClick = (event) => {
+  const { id, timeMs, interviewId } = event.currentTarget.dataset
+  const audioElement = document.getElementById("audio-"+interviewId)
+  audioElement.currentTime = timeMs / 1000
+}
+
+const renderExcerpt = (excerpt) => {
+  const id = excerpt["id"]
+  const interviewId = excerpt["Interview"][0]["id"]
+  const content = excerpt["Content"]
+  const time = excerpt["Start Time"]
+  const timeMs = time * 1000
+  const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
+  const excerptTemplate = `
+  <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
+    <td class="time">${timeReadable}</td>
+    <td class="content">${content}</td>
+  </tr>
+  `
+  return excerptTemplate;
+}
+
+const excerptElementsForInterview = (id) => {
+  return document.querySelectorAll("[data-interview-id='1']") 
+}
+
+const onAudioPlayed = (event) => {
+  console.log("onAudioPlayed with event", event)
+  console.log("my interview id is", event.currentTarget.dataset.interviewId)
+}
+
+const onAudioSeeked = (event) => {
+  console.log("onAudioSeeked with event", event)
+  console.log("my interview id is", event.currentTarget.dataset.interviewId)
+}
+
+const renderInterview = (interview) => {
+  const id = interview["id"]
+  const name = interview["Name"]
+  const audioUrl = interview["Audio File"][0]["url"]
+  const excerpts = excerptsForInterview(interview)
+  const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
+  console.log("preparing to render interview, relevant data:", audioUrl, excerpts, excerptMarkup)
+  const interviewTemplate = `
+<div class="interview" data-id="${id}">
+  <h1>${name}</h1>
+  <audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}">
+    <source src="${audioUrl}" type="audio/mp3" />
+  </audio>
+  <table>
+    <tbody>
+    ${excerptMarkup}
+    </tbody>
+  </table>
+</div>
+`
+  return interviewTemplate; 
+}
+
+const logError = (error => console.error("Error", error.message));
+</script>
+</head>
+<body>
+  <div id="interviews">
+  </div>
+</body>
+</html>
