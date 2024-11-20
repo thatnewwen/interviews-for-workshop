@@ -1,6 +1,17 @@
 <html>
 <head>
 <title></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<script src="js/showdown.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script>
 window.globals = {
   "baserow": {
@@ -29,7 +40,21 @@ window.onload = async () => {
 }
 
 const renderMarkup = () => {
-  document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[0])
+  // document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[0])
+  document.querySelector("#nav").innerHTML = renderNav(baserowCache.interview.results, baserowCache.topic.results)
+}
+
+const updateInterviewView = (id) => {
+  document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[id])
+  document.querySelector("#nav").classList.add("hidden-nav");
+}
+
+const updateTopic = (id) => {
+  document.querySelector("#topic").innerHTML = renderTopicSection(baserowCache.topic.results[id])
+}
+
+const openMenu = () => {
+  document.querySelector("#nav").classList.remove("hidden-nav");
 }
 
 const enhanceMarkup = () => {
@@ -73,17 +98,48 @@ const onExcerptClick = (event) => {
   audioElement.currentTime = timeMs / 1000
 }
 
+
+const renderTopicExcerpt = (excerpt) => {
+  var converter = new showdown.Converter()
+  const id = excerpt["id"]
+  const interviewId = excerpt["Interview"][0]["id"]
+  const interviewName = excerpt["Interview"][0]["value"]
+  const content = excerpt["Content"]
+  const time = excerpt["Start Time"]
+  const resource = excerpt["Resources"]
+  const timeMs = time * 1000
+  const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
+  let topics = ""
+  excerpt["Topic"].forEach((topic) => {
+    topics = topics + `<a href="#"><div class="topic-btn">${topic.value}</div></a>`
+  })
+  const excerptTemplate = `
+  <div onclick="updateInterviewView(${interviewId - 1})">
+    <h3>${interviewName}</h3>
+    <div class="content">${converter.makeHtml(content)}</div>
+  </div>
+  `
+  return excerptTemplate;
+}
+
 const renderExcerpt = (excerpt) => {
+  var converter = new showdown.Converter()
   const id = excerpt["id"]
   const interviewId = excerpt["Interview"][0]["id"]
   const content = excerpt["Content"]
   const time = excerpt["Start Time"]
+  const resource = excerpt["Resources"]
   const timeMs = time * 1000
   const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
+  let topics = ""
+  excerpt["Topic"].forEach((topic) => {
+    topics = topics + `<a href="#"><div class="topic-btn">${topic.value}</div></a>`
+  })
   const excerptTemplate = `
   <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
     <td class="time">${timeReadable}</td>
-    <td class="content">${content}</td>
+    <td class="content">${converter.makeHtml(content)}</td>
+    <td class="meta"><div>${topics}</div><div class="resources-block">${converter.makeHtml(resource)}</div></td>
   </tr>
   `
   return excerptTemplate;
@@ -103,24 +159,98 @@ const onAudioSeeked = (event) => {
   console.log("my interview id is", event.currentTarget.dataset.interviewId)
 }
 
+const renderNav = (interviews, topics) => {
+  let interviewList = ""
+  let topicList = ""
+  interviews.forEach((interview) => {
+    const id = interview["id"]
+    const name = interview["Name"]
+    if (name.length > 1) {
+      interviewList = interviewList + `<button onclick="updateInterviewView(${id - 1})"><div>${name}</div></button>`
+    }
+  })
+  topics.forEach((topic) => {
+    const id = topic["id"]
+    const name = topic["Name"]
+    if (name.length > 1) {
+      topicList = topicList + `<button onclick="updateTopic(${id - 1})"><div>${name}</div></button>`
+    }
+  })
+  const navTemplate = `
+  <div id="nav-container">
+    <div class="nav-left">
+    <h1>Resource Stories</h1>
+    <h2>Growers</h2>
+      <div class="list-container">
+    ${interviewList}
+    </div>
+    <h2>Nodes</h2>
+    <div class="list-container">
+    ${topicList}
+    </div>
+    </div>
+    <div class="nav-right">
+      <div id="topic"></div>
+    <button id="menu" onclick="openMenu()">MENU</a>
+    </div>
+  </div>
+  `
+  return navTemplate;
+}
+
+const renderTopicSection = (topic) => {
+  console.log(topic)
+  const name = topic["Name"];
+  const excerptList = baserowCache.excerpt.results.filter(excerpt => {
+    if (excerpt["Topic"].some(e => e.id === topic["id"])) {
+      return excerpt;
+    }
+  })
+  const excerptMarkup = excerptList.map(e => renderTopicExcerpt(e)).join("\n")
+
+  const topicTemplate = `<div>
+    <h2>${name}</h2>
+    ${excerptMarkup}
+    <div>`
+    return topicTemplate;
+}
+
 const renderInterview = (interview) => {
   const id = interview["id"]
   const name = interview["Name"]
+  const title = interview["Title"]
+  const subtitle = interview["Subtitle"]
   const audioUrl = interview["Audio File"][0]["url"]
+  let image = ""
+  if (interview["Image"].length > 0) {
+    const profileImageUrl = interview["Image"][0]["url"]
+    image =  `<img src="${profileImageUrl}" />`
+  }
   const excerpts = excerptsForInterview(interview)
   const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
   console.log("preparing to render interview, relevant data:", audioUrl, excerpts, excerptMarkup)
   const interviewTemplate = `
 <div class="interview" data-id="${id}">
-  <h1>${name}</h1>
-  <audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}">
-    <source src="${audioUrl}" type="audio/mp3" />
-  </audio>
+  <div class="excerpt-section">
+  <div class="intro-section">
+  <h1>${title}</h1>
+  <h2>${subtitle}</h2>
+  </div>
   <table>
     <tbody>
     ${excerptMarkup}
     </tbody>
   </table>
+  </div>
+  <div class="meta-section">
+    <div class="name-section">
+    <h3>${name}</h3>
+    </div>
+    ${image}
+    <audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}">
+    <source src="${audioUrl}" type="audio/mp3" />
+  </audio>
+  </div>
 </div>
 `
   return interviewTemplate; 
@@ -130,6 +260,7 @@ const logError = (error => console.error("Error", error.message));
 </script>
 </head>
 <body>
+  <div id="nav"></div>
   <div id="interviews">
   </div>
 </body>

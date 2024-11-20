@@ -1,0 +1,188 @@
+body {
+  margin: 0;
+  font-family: "Albert Sans", sans-serif;
+  background: #F3EEE4;
+}
+
+h1,h2,h3 {
+  font-family: "Spectral", serif;
+}
+
+h1 {
+  font-size: 5em;
+  text-align: center;
+  line-height: 1em;
+}
+
+h2 {
+  text-align: center;
+  font-size: 2em;
+  line-height: 1em;
+  font-weight: 400;
+}
+
+h3 {
+  font-size: 2em;
+}
+
+audio {
+  border-top: 2px solid black;
+  border-bottom: 2px solid black;
+  width: -webkit-fill-available;
+  padding: 10px;
+}
+
+td {
+  padding-bottom: 50px;
+  padding-left: 10px;
+}
+
+#topic {
+  padding: 50px;
+}
+
+.time {
+  display: flex;
+}
+
+.content{
+  max-width: 600px;
+}
+
+.interview {
+  display: flex;
+  height: 100vh;
+  overflow: scroll;
+}
+
+.interview table {
+  width: 100%;
+  padding: 50px;
+}
+
+.intro-section{
+  padding: 50px;
+  border-bottom: 2px solid black;
+}
+
+.meta-section {
+  flex: 1;
+  height: 100vh;
+  align-self: flex-start;
+    position: sticky;
+    top: 0;
+    border-left: 2px solid black;
+}
+
+.meta-section img {
+  width: 100%;
+  border-top: 2px solid black;
+}
+
+.excerpt-section {
+  flex: 2;
+}
+
+.name-section{
+  padding: 0 50px;
+}
+
+.name-section h3{
+  font-family: "Albert Sans", sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+#interviews {
+  margin-left: 40px;
+}
+
+#menu {
+  rotate: -90deg;
+    position: absolute;
+    right: -45px;
+    top: 50%;
+}
+
+.meta {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.topic-btn {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 2px solid black;
+  color: black;
+  border-radius: 25px;
+  margin-right: 5px;
+}
+
+.resources-block {
+  font-size: 14px;
+  margin: 10px 0;
+  max-width: 250px;
+}
+
+#nav button {
+  background: none;
+    font-size: 20px;
+    padding: 10px 20px;
+    margin-right: 15px;
+    text-transform: uppercase;
+    font-family: "Albert Sans", sans-serif;
+    font-weight: bold;
+    border: none;
+}
+
+.list-container{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#nav {
+  display: flex;
+  height: 100vh;
+  position: absolute;
+  background: #dee6d7;
+  width: 100%;
+  transform: translateX(0%);
+  transition: transform 300ms ease-in-out;
+  z-index: 10;
+  border-right: 2px solid black;
+}
+
+#nav.hidden-nav{
+  transform: translateX(calc(-100% + 40px));
+}
+
+#nav-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: scroll;
+}
+
+.nav-left {
+  flex: 1;
+  border-right: 2px solid black;
+  padding: 0 50px;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.nav-right {
+  flex: 2;
+}
+
+.nav-right h2, .nav-right h3 {
+  text-align: left;
+}
+
+.nav-right h3{
+  margin-bottom: 5px;
+}
