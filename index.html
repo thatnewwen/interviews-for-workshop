@@ -45,9 +45,13 @@ const renderMarkup = () => {
   document.querySelector("#nav").innerHTML = renderNav(baserowCache.interview.results, baserowCache.topic.results)
 }
 
+var audio, excerpts;
 const updateInterviewView = (id) => {
   document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[id])
   document.querySelector("#nav").classList.add("hidden-nav");
+  audio = document.querySelector('audio');
+  excerpts = document.querySelectorAll('.excerpt');
+  urlToAudioPosition(window.location.search, audio);
 }
 
 const updateTopic = (id) => {
@@ -142,11 +146,13 @@ const excerptElementsForInterview = (id) => {
 const onAudioPlayed = (event) => {
   console.log("onAudioPlayed with event", event)
   console.log("my interview id is", event.currentTarget.dataset.interviewId)
+  highlightTranscript(event.currentTarget, excerpts, 'playing')
 }
 
 const onAudioSeeked = (event) => {
   console.log("onAudioSeeked with event", event)
   console.log("my interview id is", event.currentTarget.dataset.interviewId)
+  highlightTranscript(event.currentTarget, excerpts)
 }
 
 const renderNav = (interviews, topics) => {
@@ -231,6 +237,9 @@ const renderInterview = (interview) => {
     <audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}">
     <source src="${audioUrl}" type="audio/mp3" />
   </audio>
+  <div class="p-sm">
+  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">Scroll to Active Section</button>
+  </div>
   </div>
 </div>
 `
@@ -244,5 +253,6 @@ const logError = (error => console.error("Error", error.message));
   <div id="nav"></div>
   <div id="interviews">
   </div>
+  <script src="js/audio-highlighting.js"></script>
 </body>
 </html>
