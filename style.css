@@ -32,6 +32,7 @@ audio {
   border-top: 2px solid black;
   border-bottom: 2px solid black;
   width: -webkit-fill-available;
+  width: -moz-available;
   padding: 10px;
 }
 
@@ -208,6 +209,7 @@ tr.excerpt td {
   border: 2px solid currentColor;
   border-radius: 10px;
   padding: 10px;
+  width: 100%;
 }
 .p-sm {
   padding: 10px;

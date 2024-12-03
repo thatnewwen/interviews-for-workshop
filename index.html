@@ -1,6 +1,6 @@
 <html>
 <head>
-<title></title>
+<title>Chicago Food System Interview Project - Community Food Navigator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -33,6 +33,9 @@ window.baserowCache = {
 }
 
 window.markdownRenderer = new showdown.Converter()
+window.interviewPositionMs = 0;
+window.audio = null
+window.excerpts = null
 
 window.onload = async () => {
   console.log("--- application is booting ---")
@@ -45,13 +48,12 @@ const renderMarkup = () => {
   document.querySelector("#nav").innerHTML = renderNav(baserowCache.interview.results, baserowCache.topic.results)
 }
 
-var audio, excerpts;
 const updateInterviewView = (id) => {
   document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[id])
   document.querySelector("#nav").classList.add("hidden-nav");
-  audio = document.querySelector('audio');
-  excerpts = document.querySelectorAll('.excerpt');
-  urlToAudioPosition(window.location.search, audio);
+  window.audio = document.querySelector('audio');
+  window.excerpts = Array.from(document.querySelectorAll('.excerpt'));
+  setAudioPositionFromUrl(window.location.search, audio);
 }
 
 const updateTopic = (id) => {
@@ -72,10 +74,12 @@ const fetchEverythingFromBaserow = async () => {
 }
 
 const fetchFromBaserow = (apiPath) => {
+  // NOTE: forgive me, for I have sinned: a large language model wrote the initial version of this method. I modified it to refer to the global configuration object.
+  // in my opinion this is a clear illustration of the potential value of LLMs to coders - being able to gloss over details of a well-documented API, generating code which is not quite trivial but whose correctness can be assessed at a glance by an experienced developer
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", globals.baserow.url + apiPath, true);
-	xhr.setRequestHeader("Authorization", `Token ${globals.baserow.token}`);
+	      xhr.setRequestHeader("Authorization", `Token ${globals.baserow.token}`);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -93,13 +97,11 @@ const excerptsForInterview = (interview) => {
   return filteredExcerpts
 }
 
-
 const onExcerptClick = (event) => {
   const { id, timeMs, interviewId } = event.currentTarget.dataset
   const audioElement = document.getElementById("audio-"+interviewId)
   audioElement.currentTime = timeMs / 1000
 }
-
 
 const renderTopicExcerpt = (excerpt) => {
   const id = excerpt["id"]
@@ -146,13 +148,13 @@ const excerptElementsForInterview = (id) => {
 const onAudioPlayed = (event) => {
   console.log("onAudioPlayed with event", event)
   console.log("my interview id is", event.currentTarget.dataset.interviewId)
-  highlightTranscript(event.currentTarget, excerpts, 'playing')
+  highlightTranscript('playing')
 }
 
 const onAudioSeeked = (event) => {
   console.log("onAudioSeeked with event", event)
   console.log("my interview id is", event.currentTarget.dataset.interviewId)
-  highlightTranscript(event.currentTarget, excerpts)
+  highlightTranscript()
 }
 
 const renderNav = (interviews, topics) => {
@@ -238,13 +240,55 @@ const renderInterview = (interview) => {
     <source src="${audioUrl}" type="audio/mp3" />
   </audio>
   <div class="p-sm">
-  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">Scroll to Active Section</button>
+  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">⇅ Scroll to the Active Interview Section</button>
   </div>
   </div>
 </div>
 `
   return interviewTemplate; 
 }
+
+const setAudioPositionFromUrl = (search, audio) => {
+  var urlMilliseconds;
+  const urlParams = new URLSearchParams(search);
+  urlParams.forEach((value, key) => {
+    if (key == "t") {
+      urlMilliseconds = value;
+    }
+  });
+  if (urlMilliseconds) {
+    audio.currentTime = urlMilliseconds / 1000;
+  }
+}
+
+const highlightExcerpt = (index) => {
+  if (index === -1) index = 0
+  document.querySelector(".active")?.classList.remove("active")
+  window.excerpts[index].classList.add("active");
+}
+
+const isNextExcerpt = (t) => t > window.interviewPositionMs;
+
+function highlightTranscript(status) {
+  const { audio, excerpts } = window
+  window.interviewPositionMs = audio.currentTime * 1000;
+  const excerptTimestamps = excerpts.map(e => e.dataset.timeMs)
+  console.log("timestamps array is ", excerptTimestamps);
+  var nextIndex = excerptTimestamps.findIndex(isNextExcerpt);
+  const hasNext = nextIndex == -1 ? false : true
+  if (hasNext === false) nextIndex = excerpts.length
+  const currentIndex = nextIndex - 1;
+  console.log("current active excerpt index is " + currentIndex);
+  highlightExcerpt(currentIndex);
+  if (hasNext && status === "playing") {
+    const delayMilliseconds = excerpts[nextIndex].dataset.timeMs - window.interviewPositionMs;
+    setTimeout(function () {
+      highlightTranscript("playing");
+    }, delayMilliseconds);
+  }
+}
+
+const scrollToActiveSection = () => document.querySelector(".excerpt.active")?.scrollIntoView({ behavior: "smooth" });
 
 const logError = (error => console.error("Error", error.message));
 </script>
@@ -253,6 +297,5 @@ const logError = (error => console.error("Error", error.message));
   <div id="nav"></div>
   <div id="interviews">
   </div>
-  <script src="js/audio-highlighting.js"></script>
 </body>
 </html>
