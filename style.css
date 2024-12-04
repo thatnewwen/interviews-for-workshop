@@ -3,6 +3,7 @@
   --pewter: rgb(233,233,237);
   --greenbeige: #dee6d7;
 }
+
 body {
   margin: 0;
   font-family: "Albert Sans", sans-serif;
@@ -132,6 +133,23 @@ td {
   font-size: 14px;
   margin: 10px 0;
   max-width: 250px;
+  background-color:var(--pewter);
+  padding: 5px;
+  border: 1px rgba(0,0,0,0.5) dashed;
+  border-radius: 8px;
+  cursor: default;
+}
+
+.resources-block:empty {
+  display: none;
+}
+
+.resources-block p:first-child {
+  margin-top: 0;
+}
+
+.resources-block p:last-child {
+  margin-bottom: 0;
 }
 
 #nav button {
@@ -221,7 +239,7 @@ tr.excerpt td {
 }
 
 .scroll-btn {
-  color: var(--active-color);
+  color: #000000;
   background-color: var(--pewter);
   border: 2px solid currentColor;
   border-radius: 10px;
