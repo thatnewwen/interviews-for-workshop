@@ -109,14 +109,9 @@ const onExcerptClick = (event) => {
 }
 
 const renderTopicExcerpt = (excerpt) => {
-  const id = excerpt["id"]
   const interviewId = excerpt["Interview"][0]["id"]
   const interviewName = excerpt["Interview"][0]["value"]
   const content = markdownRenderer.makeHtml(excerpt["Content"])
-  const time = excerpt["Start Time"]
-  const resource = excerpt["Resources"]
-  const timeMs = time * 1000
-  const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
   const excerptTemplate = `
   <div onclick="updateInterviewView(${interviewId - 1})">
     <h3>${interviewName}</h3>
