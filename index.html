@@ -141,19 +141,11 @@ const renderExcerpt = (excerpt) => {
   return excerptTemplate;
 }
 
-const excerptElementsForInterview = (id) => {
-  return document.querySelectorAll(`[data-interview-id='${id}']`) 
-}
-
 const onAudioPlayed = (event) => {
-  console.log("onAudioPlayed with event", event)
-  console.log("my interview id is", event.currentTarget.dataset.interviewId)
   highlightTranscript('playing')
 }
 
 const onAudioSeeked = (event) => {
-  console.log("onAudioSeeked with event", event)
-  console.log("my interview id is", event.currentTarget.dataset.interviewId)
   highlightTranscript()
 }
 
@@ -191,7 +183,6 @@ const renderNav = (interviews, topics) => {
 }
 
 const renderTopicSection = (topic) => {
-  console.log(topic)
   const name = topic["Name"];
   const excerptList = baserowCache.excerpt.results.filter(excerpt => {
     if (excerpt["Topic"].some(e => e.id === topic["id"])) {
@@ -217,7 +208,6 @@ const renderInterview = (interview) => {
   const imageMarkup = imageUrl ? `<img src='${imageUrl}' />` : ''
   const excerpts = excerptsForInterview(interview)
   const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
-  console.log("preparing to render interview, relevant data:", audioUrl, excerpts, excerptMarkup)
   const interviewTemplate = `
 <div class="interview" data-id="${id}">
   <div class="excerpt-section">
@@ -273,12 +263,10 @@ const highlightTranscript = (status) => {
   const { audio, excerpts } = window
   window.interviewPositionMs = audio.currentTime * 1000;
   const excerptTimestamps = excerpts.map(e => e.dataset.timeMs)
-  console.log("timestamps array is ", excerptTimestamps);
   var nextIndex = excerptTimestamps.findIndex(isNextExcerpt);
   const hasNext = nextIndex == -1 ? false : true
   if (hasNext === false) nextIndex = excerpts.length
   const currentIndex = nextIndex - 1;
-  console.log("current active excerpt index is " + currentIndex);
   highlightExcerpt(currentIndex);
   if (hasNext && status === "playing") {
     const delayMilliseconds = excerpts[nextIndex].dataset.timeMs - window.interviewPositionMs;
