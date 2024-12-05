@@ -100,11 +100,46 @@ td {
   margin-left: 40px;
 }
 
+.list-container button {
+  background: none;
+    font-size: 20px;
+    padding: 10px 20px;
+    margin-right: 15px;
+    text-transform: uppercase;
+    font-family: "Albert Sans", sans-serif;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.list-container button:hover {
+  text-decoration: underline;
+}
+
 #menu {
-  rotate: -90deg;
     position: absolute;
     right: -45px;
-    top: 50%;
+    top: 0;
+    height: 100%;
+    background: none;
+    font-size: 20px;
+    right: 0;
+    text-transform: uppercase;
+    font-family: "Albert Sans", sans-serif;
+    font-weight: bold;
+    border-right: 0px;
+    border-top: 0px;
+    border-bottom: 0px;
+    cursor: pointer;
+    transition: background 1s ease;
+}
+
+#menu:hover {
+  background: #bdcdb2;
+}
+
+.menu-text{
+  rotate: -90deg;
 }
 
 .meta {
@@ -128,17 +163,6 @@ td {
   max-width: 250px;
 }
 
-#nav button {
-  background: none;
-    font-size: 20px;
-    padding: 10px 20px;
-    margin-right: 15px;
-    text-transform: uppercase;
-    font-family: "Albert Sans", sans-serif;
-    font-weight: bold;
-    border: none;
-}
-
 .list-container{
   display: flex;
   flex-direction: column;
@@ -158,7 +182,7 @@ td {
 }
 
 #nav.hidden-nav{
-  transform: translateX(calc(-100% + 40px));
+  transform: translateX(calc(-100% + 72px));
 }
 
 #nav-container {
@@ -179,7 +203,10 @@ td {
 }
 
 .nav-right {
+  position: relative;
   flex: 2;
+  padding: 60px;
+  padding-right: 72px;
 }
 
 .nav-right h2, .nav-right h3 {
@@ -195,9 +222,13 @@ tr.excerpt {
   border-style: solid;
   border-width: 0 0 0 3px;
   border-color: transparent;
+  border-left: 2px solid transparent;
+  transition: border .3s ease;
+  transition: background .3s ease;
 }
 tr.excerpt.active {
-  border-color: var(--active-color);
+  border-left: 2px solid black;
+  background: #00000008;
 }
 tr.excerpt td {
   padding-top: 25px;
@@ -211,4 +242,104 @@ tr.excerpt td {
 }
 .p-sm {
   padding: 10px;
+}
+
+@media only screen and (max-width : 1024px) {
+  h1 {
+    font-size: 3em;
+    text-align: center;
+    line-height: 1em;
+  }
+
+  #nav {
+    height: auto;
+  }
+
+  #nav.hidden-nav{
+    transform: translateY(calc(-100% + 40px));
+  }
+
+  .nav-right {
+    margin-right: 0px;
+  }
+
+  #interviews {
+    margin-left: 0px;
+  }
+
+  #menu {
+    height: auto;
+    width: 100%;
+    top: auto;
+    bottom: 0;
+    border-left: 0px;
+    padding: 11px 0;
+  }
+
+  .menu-text {
+    rotate: 0deg;
+    font-size: 16px;
+  }
+
+  .meta-section {
+    margin-top: 41px;
+    border-left: 0px;
+  }
+
+  #nav-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .nav-left {
+    align-self: center;
+    border-right: none;
+    border-bottom: 2px solid currentColor;
+    width: 100%;
+  }
+
+  .interview {
+    flex-direction: column;
+  }
+
+  .excerpt-section {
+    order: 2;
+  }
+
+  audio {
+    position: fixed;
+    display: block;
+    background-color: #F3EEE4;
+    bottom: 0;
+  }
+
+  .excerpt {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+  }
+
+  tr.excerpt td {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+
+  .meta-section {
+    position: relative;
+    order: 1;
+  }
+
+  .intro-section {
+    padding: 20px;
+  }
+
+  .interview table {
+    margin: 10px;
+  }
+
+
+}
+
+@media only screen and (max-width : 640px) {
+
 }
