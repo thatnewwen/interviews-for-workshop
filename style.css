@@ -51,7 +51,6 @@ td {
 
 .time {
   display: flex;
-  font-family: "Spectral", serif;
 }
 
 .excerpt.active .time {
@@ -63,7 +62,6 @@ td {
   pointer-events: none;
   cursor: default;
   font-family: "Spectral", serif;
-  text-align: justify;
 }
 
 .interview {
@@ -131,7 +129,6 @@ td {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-family: "Spectral", serif;
 }
 
 .topic-list > * {
