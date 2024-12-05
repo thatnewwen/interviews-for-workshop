@@ -51,12 +51,19 @@ td {
 
 .time {
   display: flex;
+  font-family: "Spectral", serif;
+}
+
+.excerpt.active .time {
+  text-decoration: underline;
 }
 
 .content {
   max-width: 600px;
   pointer-events: none;
-  cursor:default;
+  cursor: default;
+  font-family: "Spectral", serif;
+  text-align: justify;
 }
 
 .interview {
@@ -116,18 +123,24 @@ td {
 
 .meta {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   flex-direction: column;
 }
 
-.topic-btn {
+.topic-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: "Spectral", serif;
+}
+
+.topic-list > * {
   display: inline-block;
-  padding: 5px 10px;
-  border: 2px solid black;
-  color: black;
-  background-color: var(--pewter);
-  border-radius: 25px;
-  margin-right: 5px;
+  color: #000000;
+}
+
+.topic-list label {
+  text-decoration: underline;
 }
 
 .resources-block {
@@ -231,7 +244,7 @@ tr.excerpt {
 }
 
 tr.excerpt.active {
-  border-color: rgba(0,0,0,0.2);
+  border-color: rgba(0,0,0,0.6);
 }
 
 tr.excerpt td {

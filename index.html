@@ -121,6 +121,10 @@ const renderTopicExcerpt = (excerpt) => {
   return excerptTemplate;
 }
 
+const openTopic = (id) => {
+  console.log("open topic called with id", id)
+}
+
 const renderExcerpt = (excerpt) => {
   const id = excerpt["id"]
   const interviewId = excerpt["Interview"][0]["id"]
@@ -130,12 +134,19 @@ const renderExcerpt = (excerpt) => {
   const resourceMarkup = resource ? markdownRenderer.makeHtml(resource)  : ''
   const timeMs = time * 1000
   const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
-  const topics = excerpt["Topic"].map(t => `<a href="#"><div class="topic-btn">${t.value}</div></a>`).join('\n')
+  console.log(excerpt["Topic"])
+  const topics = excerpt["Topic"].map(t => `<a onclick="openTopic(${t.id})">${t.value} ↠</a>`).join('\n')
   const excerptTemplate = `
   <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
     <td class="time">${timeReadable}</td>
     <td class="content">${content}</td>
-    <td class="meta"><div>${topics}</div><div class="resources-block" onclick="stopEventBubble(event)">${resourceMarkup}</div></td>
+    <td class="meta">
+      <div class="resources-block" onclick="stopEventBubble(event)">${resourceMarkup}</div>
+      <div class="topic-list" onclick="stopEventBubble(event)">
+        <label>Referenced Topics</label>
+        ${topics}
+      </div>
+    </td>
   </tr>
   `
   return excerptTemplate;
