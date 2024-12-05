@@ -103,6 +103,7 @@ const excerptsForInterview = (interview) => {
 }
 
 const onExcerptClick = (event) => {
+  if (event.currentTarget.classList.contains("active")) return
   const { id, timeMs, interviewId } = event.currentTarget.dataset
   const audioElement = document.getElementById("audio-"+interviewId)
   audioElement.currentTime = timeMs / 1000
