@@ -289,6 +289,10 @@ const highlightTranscript = (status) => {
 
 const scrollToActiveSection = () => document.querySelector(".excerpt.active")?.scrollIntoView({ behavior: "smooth" });
 
+const setHistoryState = (blob) => {
+  history.pushState({}, "", "?" + new URLSearchParams(blob).toString())
+}
+
 const logError = (error) => console.error("Error", error.message);
 const stopEventBubble = (e) => e.stopPropagation();
 </script>
