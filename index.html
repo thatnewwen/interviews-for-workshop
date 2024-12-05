@@ -1,6 +1,6 @@
 <html>
 <head>
-<title></title>
+<title>Chicago Food System Interview Project - Community Food Navigator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <script src="js/showdown.min.js"></script>
+<!-- NOTE: i assume jQuery is only here for debugging purposes? Doesn't look like it's used anywhere in the code. -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script>
@@ -33,6 +34,9 @@ window.baserowCache = {
 }
 
 window.markdownRenderer = new showdown.Converter()
+window.interviewPositionMs = 0;
+window.audio = null
+window.excerpts = null
 
 window.onload = async () => {
   console.log("--- application is booting ---")
@@ -45,13 +49,12 @@ const renderMarkup = () => {
   document.querySelector("#nav").innerHTML = renderNav(baserowCache.interview.results, baserowCache.topic.results)
 }
 
-var audio, excerpts;
 const updateInterviewView = (id) => {
   document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[id])
   document.querySelector("#nav").classList.add("hidden-nav");
-  audio = document.querySelector('audio');
-  excerpts = document.querySelectorAll('.excerpt');
-  urlToAudioPosition(window.location.search, audio);
+  window.audio = document.querySelector('audio');
+  window.excerpts = Array.from(document.querySelectorAll('.excerpt'));
+  setAudioPositionFromUrl(window.location.search, audio);
 }
 
 const updateTopic = (id) => {
@@ -64,7 +67,9 @@ const openMenu = () => {
 
 const fetchEverythingFromBaserow = async () => {
   const { interview, excerpt, topic } = globals.baserow.tableIds
-  // NOTE: this was written under the assumption that there aren't enough rows in these tables to cause pagination; as written, this will only pull the first page of results from each table. assuming this thing isn't going to scale arbitarily, we could get away with continuing to fetch records and shove them into the cache until each table is exhausted
+  // NOTE: this was written under the assumption that there aren't enough rows in these tables to cause pagination; as written,
+  // this will only pull the first page of results from each table. assuming this thing isn't going to scale arbitarily, we 
+  // could get away with continuing to fetch records and shove them into the cache until each table is exhausted.
   baserowCache.interview = await fetchFromBaserow(`/database/rows/table/${interview}/?user_field_names=true`) 
   baserowCache.topic = await fetchFromBaserow(`/database/rows/table/${topic}/?user_field_names=true`) 
   baserowCache.excerpt = await fetchFromBaserow(`/database/rows/table/${excerpt}/?user_field_names=true`) 
@@ -72,10 +77,14 @@ const fetchEverythingFromBaserow = async () => {
 }
 
 const fetchFromBaserow = (apiPath) => {
+  // NOTE: Forgive me, reader, for I have sinned: a large language model wrote the initial version of this method. I modified it
+  // to refer to the global configuration object. In my opinion this is a clear illustration of the potential value of LLMs to coders 
+  // - being able to gloss over details of a well-documented API, generating code which is not quite trivial but whose correctness can be 
+  // assessed at a glance by an experienced developer.
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", globals.baserow.url + apiPath, true);
-	xhr.setRequestHeader("Authorization", `Token ${globals.baserow.token}`);
+	      xhr.setRequestHeader("Authorization", `Token ${globals.baserow.token}`);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -93,23 +102,17 @@ const excerptsForInterview = (interview) => {
   return filteredExcerpts
 }
 
-
 const onExcerptClick = (event) => {
+  if (event.currentTarget.classList.contains("active")) return
   const { id, timeMs, interviewId } = event.currentTarget.dataset
   const audioElement = document.getElementById("audio-"+interviewId)
   audioElement.currentTime = timeMs / 1000
 }
 
-
 const renderTopicExcerpt = (excerpt) => {
-  const id = excerpt["id"]
   const interviewId = excerpt["Interview"][0]["id"]
   const interviewName = excerpt["Interview"][0]["value"]
   const content = markdownRenderer.makeHtml(excerpt["Content"])
-  const time = excerpt["Start Time"]
-  const resource = excerpt["Resources"]
-  const timeMs = time * 1000
-  const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
   const excerptTemplate = `
   <div onclick="updateInterviewView(${interviewId - 1})">
     <h3>${interviewName}</h3>
@@ -117,6 +120,10 @@ const renderTopicExcerpt = (excerpt) => {
   </div>
   `
   return excerptTemplate;
+}
+
+const openTopic = (id) => {
+  console.log("open topic called with id", id)
 }
 
 const renderExcerpt = (excerpt) => {
@@ -128,31 +135,30 @@ const renderExcerpt = (excerpt) => {
   const resourceMarkup = resource ? markdownRenderer.makeHtml(resource)  : ''
   const timeMs = time * 1000
   const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
-  const topics = excerpt["Topic"].map(t => `<a href="#"><div class="topic-btn">${t.value}</div></a>`).join('\n')
+  console.log(excerpt["Topic"])
+  const topics = excerpt["Topic"].map(t => `<a onclick="openTopic(${t.id})">${t.value} ↠</a>`).join('\n')
   const excerptTemplate = `
   <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
     <td class="time">${timeReadable}</td>
     <td class="content">${content}</td>
-    <td class="meta"><div>${topics}</div><div class="resources-block">${resourceMarkup}</div></td>
+    <td class="meta">
+      <div class="resources-block" onclick="stopEventBubble(event)">${resourceMarkup}</div>
+      <div class="topic-list" onclick="stopEventBubble(event)">
+        <label>Referenced Topics</label>
+        ${topics}
+      </div>
+    </td>
   </tr>
   `
   return excerptTemplate;
 }
 
-const excerptElementsForInterview = (id) => {
-  return document.querySelectorAll(`[data-interview-id='${id}']`) 
-}
-
 const onAudioPlayed = (event) => {
-  console.log("onAudioPlayed with event", event)
-  console.log("my interview id is", event.currentTarget.dataset.interviewId)
-  highlightTranscript(event.currentTarget, excerpts, 'playing')
+  highlightTranscript('playing')
 }
 
 const onAudioSeeked = (event) => {
-  console.log("onAudioSeeked with event", event)
-  console.log("my interview id is", event.currentTarget.dataset.interviewId)
-  highlightTranscript(event.currentTarget, excerpts)
+  highlightTranscript()
 }
 
 const renderNav = (interviews, topics) => {
@@ -194,7 +200,6 @@ The Resource Stories website is a space for growers to share stories that demyst
 }
 
 const renderTopicSection = (topic) => {
-  console.log(topic)
   const name = topic["Name"];
   const excerptList = baserowCache.excerpt.results.filter(excerpt => {
     if (excerpt["Topic"].some(e => e.id === topic["id"])) {
@@ -220,7 +225,6 @@ const renderInterview = (interview) => {
   const imageMarkup = imageUrl ? `<img src='${imageUrl}' />` : ''
   const excerpts = excerptsForInterview(interview)
   const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
-  console.log("preparing to render interview, relevant data:", audioUrl, excerpts, excerptMarkup)
   const interviewTemplate = `
 <div class="interview" data-id="${id}">
   <div class="excerpt-section">
@@ -243,7 +247,7 @@ const renderInterview = (interview) => {
     <source src="${audioUrl}" type="audio/mp3" />
   </audio>
   <div class="p-sm">
-  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">Scroll to Active Section</button>
+  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">⇅ Scroll to the Active Interview Section</button>
   </div>
   </div>
 </div>
@@ -251,13 +255,56 @@ const renderInterview = (interview) => {
   return interviewTemplate; 
 }
 
-const logError = (error => console.error("Error", error.message));
+const setAudioPositionFromUrl = (search, audio) => {
+  var urlMilliseconds;
+  const urlParams = new URLSearchParams(search);
+  urlParams.forEach((value, key) => {
+    if (key == "t") {
+      urlMilliseconds = value;
+    }
+  });
+  if (urlMilliseconds) {
+    audio.currentTime = urlMilliseconds / 1000;
+  }
+}
+
+const highlightExcerpt = (index) => {
+  if (index === -1) index = 0
+  document.querySelector(".active")?.classList.remove("active")
+  window.excerpts[index].classList.add("active");
+}
+
+const isNextExcerpt = (t) => t > window.interviewPositionMs;
+
+const highlightTranscript = (status) => {
+  const { audio, excerpts } = window
+  window.interviewPositionMs = audio.currentTime * 1000;
+  const excerptTimestamps = excerpts.map(e => e.dataset.timeMs)
+  var nextIndex = excerptTimestamps.findIndex(isNextExcerpt);
+  const hasNext = nextIndex == -1 ? false : true
+  if (hasNext === false) nextIndex = excerpts.length
+  const currentIndex = nextIndex - 1;
+  highlightExcerpt(currentIndex);
+  if (hasNext && status === "playing") {
+    const delayMilliseconds = excerpts[nextIndex].dataset.timeMs - window.interviewPositionMs;
+    setTimeout(function () {
+      highlightTranscript("playing");
+    }, delayMilliseconds);
+  }
+}
+
+const scrollToActiveSection = () => document.querySelector(".excerpt.active")?.scrollIntoView({ behavior: "smooth" });
+
+const setHistoryState = (blob) => {
+  history.pushState({}, "", "?" + new URLSearchParams(blob).toString())
+}
+
+const logError = (error) => console.error("Error", error.message);
+const stopEventBubble = (e) => e.stopPropagation();
 </script>
 </head>
 <body>
   <div id="nav"></div>
-  <div id="interviews">
-  </div>
-  <script src="js/audio-highlighting.js"></script>
+  <div id="interviews"></div>
 </body>
 </html>
