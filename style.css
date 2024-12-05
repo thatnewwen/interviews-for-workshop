@@ -53,10 +53,6 @@ td {
   display: flex;
 }
 
-.excerpt.active .time {
-  text-decoration: underline;
-}
-
 .content {
   max-width: 600px;
   pointer-events: none;
