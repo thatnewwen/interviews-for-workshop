@@ -1,5 +1,4 @@
 :root {
-  --active-color: #000000;
   --pewter: rgb(233,233,237);
   --greenbeige: #dee6d7;
   --beige: #F3EEE4;
@@ -168,7 +167,12 @@ td {
 }
 
 .topic-list label {
-  text-decoration: underline;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.topic-list a {
+  cursor: pointer;
 }
 
 .resources-block {
@@ -198,6 +202,11 @@ td {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  text-align: left;
+}
+
+.interview-list button {
+  text-align: left;
 }
 
 #nav {
@@ -353,7 +362,7 @@ tr.excerpt td {
   audio {
     position: fixed;
     display: block;
-    background-color: #F3EEE4;
+    background-color: var(--beige);
     bottom: 0;
   }
 
@@ -381,9 +390,4 @@ tr.excerpt td {
     margin: 10px;
   }
 
-
-}
-
-@media only screen and (max-width : 640px) {
-
-}
+} /* end narrow mode media query block */

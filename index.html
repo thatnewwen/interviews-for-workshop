@@ -58,7 +58,9 @@ const updateInterviewView = (id) => {
 }
 
 const updateTopic = (id) => {
-  document.querySelector("#topic").innerHTML = renderTopicSection(baserowCache.topic.results[id])
+  const topicBlob = baserowCache.topic.results.find(t => t.id === id)
+  document.querySelector("#topic").innerHTML = renderTopicSection(topicBlob)
+  openMenu()
 }
 
 const openMenu = () => {
@@ -122,10 +124,6 @@ const renderTopicExcerpt = (excerpt) => {
   return excerptTemplate;
 }
 
-const openTopic = (id) => {
-  console.log("open topic called with id", id)
-}
-
 const renderExcerpt = (excerpt) => {
   const id = excerpt["id"]
   const interviewId = excerpt["Interview"][0]["id"]
@@ -136,17 +134,20 @@ const renderExcerpt = (excerpt) => {
   const timeMs = time * 1000
   const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
   console.log(excerpt["Topic"])
-  const topics = excerpt["Topic"].map(t => `<a onclick="openTopic(${t.id})">${t.value} ↠</a>`).join('\n')
+  const topics = excerpt["Topic"].map(t => `<a onclick="updateTopic(${t.id})">${t.value} ↠</a>`).join('\n')
+  const topicList = excerpt["Topic"].length === 0 ? '' : `
+    <div class="topic-list" onclick="stopEventBubble(event)">
+      <label>Resources</label>
+      ${topics}
+    </div>
+  `
   const excerptTemplate = `
   <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
     <td class="time">${timeReadable}</td>
     <td class="content">${content}</td>
     <td class="meta">
       <div class="resources-block" onclick="stopEventBubble(event)">${resourceMarkup}</div>
-      <div class="topic-list" onclick="stopEventBubble(event)">
-        <label>Referenced Topics</label>
-        ${topics}
-      </div>
+      ${topicList}
     </td>
   </tr>
   `
@@ -177,7 +178,7 @@ const renderNav = (interviews, topics) => {
     <div class="nav-left">
     <h1>Resource Stories</h1>
     <h2>Growers</h2>
-      <div class="list-container">
+      <div class="list-container interview-list">
     ${interviewList}
     </div>
     <h2>Topics</h2>
