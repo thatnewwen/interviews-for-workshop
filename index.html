@@ -37,30 +37,66 @@ window.markdownRenderer = new showdown.Converter()
 window.interviewPositionMs = 0;
 window.audio = null
 window.excerpts = null
+window.interviewId = null
+window.topicId = null
 
 window.onload = async () => {
   console.log("--- application is booting ---")
   await fetchEverythingFromBaserow()
   console.log("--- baserow fetch successful; rendering ---")
   renderMarkup()
+  setAppStateFromUrl()
 }
+
+const blobFromUrlParams = () => {
+  // NOTE: taken from stackoverflow
+  return location.search
+    .slice(1)
+    .split('&')
+    .map(p => p.split('='))
+    .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+}
+
+const setAppStateFromUrl = () => {
+  console.log("setting app state from url")
+  const search = blobFromUrlParams()
+  if (search.interview !== "undefined") {
+    updateInterviewView(search.interview)
+    if (search.excerpt !== "undefined") {
+      highlightExcerptById(search.excerpt)
+      scrollToActiveSection()
+    }
+  } else if(search.topic !== "undefined") {
+    updateTopic(search.topic)
+  } else {
+    openMenu()
+  }
+}
+
+window.addEventListener("popstate", setAppStateFromUrl)
 
 const renderMarkup = () => {
   document.querySelector("#nav").innerHTML = renderNav(baserowCache.interview.results, baserowCache.topic.results)
 }
 
 const updateInterviewView = (id) => {
-  document.querySelector("#interviews").innerHTML = renderInterview(baserowCache.interview.results[id])
+  console.log("id is ", id)
+  console.log("cached interviews are ", baserowCache.interview.results)
+  const interview = baserowCache.interview.results.find(i => i.id == id)
+  console.log("interview blob is ", interview)
+  document.querySelector("#interviews").innerHTML = renderInterview(interview)
   document.querySelector("#nav").classList.add("hidden-nav");
   window.audio = document.querySelector('audio');
   window.excerpts = Array.from(document.querySelectorAll('.excerpt'));
   setAudioPositionFromUrl(window.location.search, audio);
+  window.interviewId = id
 }
 
 const updateTopic = (id) => {
   const topicBlob = baserowCache.topic.results.find(t => t.id === id)
   document.querySelector("#topic").innerHTML = renderTopicSection(topicBlob)
   openMenu()
+  window.topicId = id
 }
 
 const openMenu = () => {
@@ -116,7 +152,7 @@ const renderTopicExcerpt = (excerpt) => {
   const interviewName = excerpt["Interview"][0]["value"]
   const content = markdownRenderer.makeHtml(excerpt["Content"])
   const excerptTemplate = `
-  <div onclick="updateInterviewView(${interviewId - 1})">
+  <div onclick="updateInterviewView(${interviewId})">
     <h3>${interviewName}</h3>
     <div class="content">${content}</div>
   </div>
@@ -134,7 +170,7 @@ const renderExcerpt = (excerpt) => {
   const timeMs = time * 1000
   const timeReadable = new Date(timeMs).toISOString().substring(11, 19)
   console.log(excerpt["Topic"])
-  const topics = excerpt["Topic"].map(t => `<a onclick="updateTopic(${t.id})">${t.value} ↠</a>`).join('\n')
+  const topics = excerpt["Topic"].map(t => `<a onclick="withHistory({topic: ${t.id}}, updateTopic, ${t.id})">${t.value} ↠</a>`).join('\n')
   const topicList = excerpt["Topic"].length === 0 ? '' : `
     <div class="topic-list" onclick="stopEventBubble(event)">
       <label>Resources</label>
@@ -142,7 +178,7 @@ const renderExcerpt = (excerpt) => {
     </div>
   `
   const excerptTemplate = `
-  <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="onExcerptClick(event)">
+  <tr class="excerpt" data-id="${id}" data-time-ms="${timeMs}" data-interview-id="${interviewId}" onclick="withHistory({interview: ${interviewId}, excerpt: ${id}}, onExcerptClick, event)">
     <td class="time">${timeReadable}</td>
     <td class="content">${content}</td>
     <td class="meta">
@@ -166,12 +202,12 @@ const renderNav = (interviews, topics) => {
   const interviewList = interviews.map(interview => {
     const id = interview["id"]
     const name = interview["Name"]
-    return `<button onclick="updateInterviewView(${id - 1})"><div>${name}</div></button>`
+    return `<button onclick="withHistory({interview: ${id}}, updateInterviewView, ${id - 1})"><div>${name}</div></button>`
   }).join('\n')
   const topicList = topics.map(topic => {
     const id = topic["id"]
     const name = topic["Name"]
-    return `<button onclick="updateTopic(${id - 1})"><div>${name}</div></button>`
+    return `<button onclick="withHistory({topic: ${id}}, updateTopic, ${id})"><div>${name}</div></button>`
   }).join('\n')
   const navTemplate = `
   <div id="nav-container">
@@ -182,7 +218,7 @@ const renderNav = (interviews, topics) => {
     ${interviewList}
     </div>
     <h2>Topics</h2>
-    <div class="list-container">
+    <div class="list-container topic-list">
     ${topicList}
     </div>
     </div>
@@ -193,7 +229,7 @@ The Resource Stories website is a space for growers to share stories that demyst
 </p>  
       </div>
       <div id="topic"></div>
-    <button id="menu" onclick="openMenu()"><div class="menu-text">MENU</div></a>
+    <button id="menu" onclick="withHistory({}, openMenu)"><div class="menu-text">MENU</div></a>
     </div>
   </div>
   `
@@ -217,6 +253,7 @@ const renderTopicSection = (topic) => {
 }
 
 const renderInterview = (interview) => {
+  console.log("attempting to render interview", interview)
   const id = interview["id"]
   const name = interview["Name"]
   const title = interview["Title"]
@@ -275,6 +312,13 @@ const highlightExcerpt = (index) => {
   window.excerpts[index].classList.add("active");
 }
 
+const highlightExcerptById = (index) => {
+  const excerpt = document.querySelector(`tr.excerpt[data-id='${index}']`)
+  if (!excerpt) return;
+  document.querySelector(".active")?.classList.remove("active")
+  excerpt.classList.add("active");
+}
+
 const isNextExcerpt = (t) => t > window.interviewPositionMs;
 
 const highlightTranscript = (status) => {
@@ -295,6 +339,11 @@ const highlightTranscript = (status) => {
 }
 
 const scrollToActiveSection = () => document.querySelector(".excerpt.active")?.scrollIntoView({ behavior: "smooth" });
+
+const withHistory = (blob, method, ...args) => {
+  method.apply(this, args)
+  setHistoryState(blob)
+}
 
 const setHistoryState = (blob) => {
   history.pushState({}, "", "?" + new URLSearchParams(blob).toString())
