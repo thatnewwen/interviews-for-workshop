@@ -202,7 +202,7 @@ const renderNav = (interviews, topics) => {
   const interviewList = interviews.map(interview => {
     const id = interview["id"]
     const name = interview["Name"]
-    return `<button onclick="withHistory({interview: ${id}}, updateInterviewView, ${id - 1})"><div>${name}</div></button>`
+    return `<button onclick="withHistory({interview: ${id}}, updateInterviewView, ${id})"><div>${name}</div></button>`
   }).join('\n')
   const topicList = topics.map(topic => {
     const id = topic["id"]
