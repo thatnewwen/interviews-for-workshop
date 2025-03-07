@@ -34,11 +34,11 @@ h3 {
 }
 
 audio {
-  border-top: 2px solid black;
+  /* border-top: 2px solid black;
   border-bottom: 2px solid black;
   width: -webkit-fill-available;
   width: -moz-available;
-  padding: 10px;
+  padding: 10px; */
 }
 
 td {
@@ -55,7 +55,7 @@ td {
 }
 
 .content {
-  max-width: 600px;
+  max-width: 800px;
   pointer-events: none;
   cursor: default;
   font-family: "Spectral", serif;
@@ -160,7 +160,7 @@ td {
 .topic-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .topic-list > * {
@@ -180,7 +180,6 @@ td {
 .resources-block {
   font-size: 14px;
   margin: 10px 0;
-  max-width: 250px;
   background-color: var(--pewter);
   padding: 5px;
   border: 1px rgba(0, 0, 0, 0.5) dashed;
@@ -284,6 +283,10 @@ tr.excerpt.active {
 tr.excerpt td {
   padding-top: 25px;
   padding-bottom: 25px;
+}
+
+.excerpt img {
+  max-width: 600px;
 }
 
 .scroll-btn {

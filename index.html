@@ -18,11 +18,11 @@ window.globals = {
   "baserow": {
     "url": "https://api.baserow.io/api",
     "token": "cSubd5vZjON0ekgsikysGg3aFIPciIqq",
-    "databaseId": "27606",
+    "databaseId": "189942",
     "tableIds": {
-      "interview": "61327",
-      "excerpt": "61328",
-      "topic": "383980",
+      "interview": "460216",
+      "excerpt": "460217",
+      "topic": "460218",
     }
   }
 }
@@ -259,8 +259,26 @@ const renderInterview = (interview) => {
   const title = interview["Title"]
   const subtitle = interview["Subtitle"]
   const audioUrl = interview["Audio File"][0]["url"]
+  const images = interview["Photos"]
   const imageUrl = interview["Image"][0] ? interview["Image"][0]["url"] : null
   const imageMarkup = imageUrl ? `<img src='${imageUrl}' />` : ''
+  const imageMapMarkup = images.map((photo) => {
+    if (!!photo["url"]) {
+      return `<img src='${photo["url"]}' />`
+    } else {
+      ''
+    }
+  })
+  const resource = interview["Resources"]
+  const resourceMarkup = resource ? markdownRenderer.makeHtml(resource)  : ''
+  const topics = interview["Topics"].map(t => `<a onclick="withHistory({topic: ${t.id}}, updateTopic, ${t.id})">${t.value} ↠</a>`).join('\n')
+  const topicList = interview["Topics"].length === 0 ? '' : `
+    <div class="topic-list" onclick="stopEventBubble(event)">
+      <label>Resources</label>
+      ${topics}
+    </div>
+  `
+  const text = interview["Text"]
   const excerpts = excerptsForInterview(interview)
   const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
   const interviewTemplate = `
@@ -272,7 +290,21 @@ const renderInterview = (interview) => {
   </div>
   <table>
     <tbody>
-    ${excerptMarkup}
+    <tr class="excerpt">
+      <td class="content">${text}</td>
+      <td class="meta">
+      </td>
+    </tr>
+    <tr class="excerpt">
+      <td class="content">${imageMapMarkup}</td>
+      <td class="meta">
+      </td>
+    </tr>
+    <tr class="excerpt">
+      <td class="content"><audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}"></audio><source src="${audioUrl}" type="audio/mp3" /></td>
+      <td class="meta">
+      </td>
+    </tr>
     </tbody>
   </table>
   </div>
@@ -280,12 +312,9 @@ const renderInterview = (interview) => {
     <div class="name-section">
     <h3>${name}</h3>
     </div>
-    ${imageMarkup}
-    <audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}">
-    <source src="${audioUrl}" type="audio/mp3" />
-  </audio>
   <div class="p-sm">
-  <button onclick="scrollToActiveSection()" type="button" class="scroll-btn">⇅ Scroll to the Active Interview Section</button>
+    <div class="resources-block" onclick="stopEventBubble(event)">${resourceMarkup}</div>
+    ${topicList}
   </div>
   </div>
 </div>
