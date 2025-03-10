@@ -35,7 +35,6 @@ window.baserowCache = {
 
 window.markdownRenderer = new showdown.Converter()
 window.interviewPositionMs = 0;
-window.audio = null
 window.excerpts = null
 window.interviewId = null
 window.topicId = null
@@ -86,7 +85,6 @@ const updateInterviewView = (id) => {
   console.log("interview blob is ", interview)
   document.querySelector("#interviews").innerHTML = renderInterview(interview)
   document.querySelector("#nav").classList.add("hidden-nav");
-  window.audio = document.querySelector('audio');
   window.excerpts = Array.from(document.querySelectorAll('.excerpt'));
   setAudioPositionFromUrl(window.location.search, audio);
   window.interviewId = id
@@ -143,8 +141,6 @@ const excerptsForInterview = (interview) => {
 const onExcerptClick = (event) => {
   if (event.currentTarget.classList.contains("active")) return
   const { id, timeMs, interviewId } = event.currentTarget.dataset
-  const audioElement = document.getElementById("audio-"+interviewId)
-  audioElement.currentTime = timeMs / 1000
 }
 
 const renderTopicExcerpt = (excerpt) => {
@@ -188,14 +184,6 @@ const renderExcerpt = (excerpt) => {
   </tr>
   `
   return excerptTemplate;
-}
-
-const onAudioPlayed = (event) => {
-  highlightTranscript('playing')
-}
-
-const onAudioSeeked = (event) => {
-  highlightTranscript()
 }
 
 const renderNav = (interviews, topics) => {
@@ -278,7 +266,7 @@ const renderInterview = (interview) => {
       ${topics}
     </div>
   `
-  const text = interview["Text"]
+  const text = markdownRenderer.makeHtml(interview["Text"])
   const excerpts = excerptsForInterview(interview)
   const excerptMarkup = excerpts.map(e => renderExcerpt(e)).join("\n")
   const interviewTemplate = `
@@ -301,7 +289,7 @@ const renderInterview = (interview) => {
       </td>
     </tr>
     <tr class="excerpt">
-      <td class="content"><audio id="audio-${id}" controls="" preload="auto" onplay="onAudioPlayed(event)" onseeked="onAudioSeeked(event)" data-interview-id="${id}"></audio><source src="${audioUrl}" type="audio/mp3" /></td>
+      <td class="content"><audio id="audio-${id}" controls data-interview-id="${id}"><source src="${audioUrl}" type="audio/mp3" /></audio></td>
       <td class="meta">
       </td>
     </tr>
@@ -351,8 +339,7 @@ const highlightExcerptById = (index) => {
 const isNextExcerpt = (t) => t > window.interviewPositionMs;
 
 const highlightTranscript = (status) => {
-  const { audio, excerpts } = window
-  window.interviewPositionMs = audio.currentTime * 1000;
+  const { excerpts } = window
   const excerptTimestamps = excerpts.map(e => e.dataset.timeMs)
   var nextIndex = excerptTimestamps.findIndex(isNextExcerpt);
   const hasNext = nextIndex == -1 ? false : true

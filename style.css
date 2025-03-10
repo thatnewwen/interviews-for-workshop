@@ -56,7 +56,7 @@ td {
 
 .content {
   max-width: 800px;
-  pointer-events: none;
+  /* pointer-events: none; */
   cursor: default;
   font-family: "Spectral", serif;
 }
@@ -363,13 +363,6 @@ tr.excerpt td {
 
   .excerpt-section {
     order: 2;
-  }
-
-  audio {
-    position: fixed;
-    display: block;
-    background-color: var(--beige);
-    bottom: 0;
   }
 
   .excerpt {
