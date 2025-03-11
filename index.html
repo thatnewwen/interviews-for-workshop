@@ -246,7 +246,7 @@ const renderInterview = (interview) => {
   const name = interview["Name"]
   const title = interview["Title"]
   const subtitle = interview["Subtitle"]
-  const audioUrl = interview["Audio File"][0]["url"]
+  const audioUrl = interview["Audio File"][0] ? interview["Audio File"][0]["url"] : null
   const images = interview["Photos"]
   const imageUrl = interview["Image"][0] ? interview["Image"][0]["url"] : null
   const imageMarkup = imageUrl ? `<img src='${imageUrl}' />` : ''
@@ -274,7 +274,6 @@ const renderInterview = (interview) => {
   <div class="excerpt-section">
   <div class="intro-section">
   <h1>${title}</h1>
-  <h2>${subtitle}</h2>
   </div>
   <table>
     <tbody>
